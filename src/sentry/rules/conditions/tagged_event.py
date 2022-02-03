@@ -1,16 +1,20 @@
+from typing import Any, Dict
+
 from django import forms
 
 from sentry import tagstore
-from sentry.rules import MATCH_CHOICES, MatchType
+from sentry.eventstore.models import Event
+from sentry.rules import EventState, MATCH_CHOICES, MatchType
 from sentry.rules.conditions.base import EventCondition
 
 
-class TaggedEventForm(forms.Form):
+class TaggedEventForm(forms.Form):  # type: ignore
+
     key = forms.CharField(widget=forms.TextInput())
     match = forms.ChoiceField(choices=list(MATCH_CHOICES.items()), widget=forms.Select())
     value = forms.CharField(widget=forms.TextInput(), required=False)
 
-    def clean(self):
+    def clean(self) -> Dict[str, Any]:
         super().clean()
 
         match = self.cleaned_data.get("match")
@@ -18,6 +22,7 @@ class TaggedEventForm(forms.Form):
 
         if match not in (MatchType.IS_SET, MatchType.NOT_SET) and not value:
             raise forms.ValidationError("This field is required.")
+        return {}
 
 
 class TaggedEventCondition(EventCondition):
@@ -30,7 +35,7 @@ class TaggedEventCondition(EventCondition):
         "value": {"type": "string", "placeholder": "value"},
     }
 
-    def passes(self, event, state, **kwargs):
+    def passes(self, event: Event, state: EventState, **kwargs: Any) -> bool:
         key = self.get_option("key")
         match = self.get_option("match")
         value = self.get_option("value")
@@ -114,7 +119,9 @@ class TaggedEventCondition(EventCondition):
                     return False
             return True
 
-    def render_label(self):
+        raise RuntimeError("Invalid Match")
+
+    def render_label(self) -> str:
         data = {
             "key": self.data["key"],
             "value": self.data["value"],
