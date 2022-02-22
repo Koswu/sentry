@@ -10,11 +10,14 @@ from sentry.api.serializers import serialize
 from sentry.api.serializers.models.app_platform_event import AppPlatformEvent
 from sentry.api.serializers.models.incident import IncidentSerializer
 from sentry.constants import SentryAppInstallationStatus
-from sentry.incidents.models import INCIDENT_STATUS, IncidentStatus
-from sentry.integrations.metric_alerts import incident_attachment_info
 from sentry.eventstore.models import Event
-from sentry.incidents.models import INCIDENT_STATUS, AlertRuleTriggerAction, Incident
-from sentry.integrations.metric_alerts import incident_attachment_info, incident_status_info
+from sentry.incidents.models import (
+    INCIDENT_STATUS,
+    AlertRuleTriggerAction,
+    Incident,
+    IncidentStatus,
+)
+from sentry.integrations.metric_alerts import incident_attachment_info
 from sentry.models import SentryApp, SentryAppInstallation
 from sentry.plugins.base import plugins
 from sentry.rules import EventState

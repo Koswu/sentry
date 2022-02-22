@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from typing import Any, Callable, Tuple
-from typing import
 
 from django import forms
 
@@ -12,7 +11,7 @@ from sentry.rules import LEVEL_MATCH_CHOICES as MATCH_CHOICES
 from sentry.rules import EventState, MatchType
 from sentry.rules.conditions.base import EventCondition
 
-key: Callable[[Tuple[str, str]], str] = lambda x: x[0]
+key: Callable[[Tuple[int, str]], int] = lambda x: x[0]
 LEVEL_CHOICES = OrderedDict(
     [(f"{k}", v) for k, v in sorted(LOG_LEVELS.items(), key=key, reverse=True)]
 )

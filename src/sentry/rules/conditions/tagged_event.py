@@ -4,7 +4,7 @@ from django import forms
 
 from sentry import tagstore
 from sentry.eventstore.models import Event
-from sentry.rules import EventState, MATCH_CHOICES, MatchType
+from sentry.rules import MATCH_CHOICES, EventState, MatchType
 from sentry.rules.conditions.base import EventCondition
 
 

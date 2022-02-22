@@ -1,4 +1,6 @@
-from typing import Any, Generator, Mapping, Optional, Sequence
+from __future__ import annotations
+
+from typing import Any, Generator, Mapping, Sequence
 
 from rest_framework import serializers
 
@@ -14,7 +16,7 @@ from sentry.tasks.sentry_apps import notify_sentry_app
 ValidationError = serializers.ValidationError
 
 
-def validate_field(value: Optional[str], field: Mapping[str, Any], app_name: str) -> None:
+def validate_field(value: str | None, field: Mapping[str, Any], app_name: str) -> None:
     # Only validate synchronous select fields
     if field.get("type") == "select" and not field.get("uri"):
         allowed_values = [option[0] for option in field.get("options", [])]
@@ -55,7 +57,7 @@ class NotifyEventSentryAppAction(EventAction):
 
         return action_list
 
-    def get_sentry_app(self, event: Event) -> Optional[SentryApp]:
+    def get_sentry_app(self, event: Event) -> SentryApp | None:
         extra = {"event_id": event.event_id}
 
         sentry_app_installation_uuid = self.get_option("sentryAppInstallationUuid")
@@ -70,7 +72,7 @@ class NotifyEventSentryAppAction(EventAction):
 
         return None
 
-    def get_setting_value(self, field_name):
+    def get_setting_value(self, field_name: str) -> str | None:
         incoming_settings = self.data.get("settings", [])
         return next(
             (setting["value"] for setting in incoming_settings if setting["name"] == field_name),

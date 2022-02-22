@@ -55,8 +55,8 @@ class RuleDescriptor(type):
 
 
 class RuleBase(metaclass=RuleDescriptor):
-    label: str
-    form_cls: Type[forms.Form]
+    label: str = None  # type: ignore
+    form_cls: Type[forms.Form] = None  # type: ignore
 
     logger = logging.getLogger("sentry.rules")
 
