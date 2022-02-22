@@ -117,7 +117,7 @@ class BaseEventFrequencyCondition(EventCondition):
         current_value = self.get_rate(event, interval, self.rule.environment_id)  # type: ignore
         return current_value > value
 
-    def query(self, event: Event, start: datetime, end: datetime, environment_id: str) -> Any:
+    def query(self, event: Event, start: datetime, end: datetime, environment_id: str) -> int:
         query_result = self.query_hook(event, start, end, environment_id)
         metrics.incr(
             "rules.conditions.queried_snuba",
@@ -128,7 +128,7 @@ class BaseEventFrequencyCondition(EventCondition):
         )
         return query_result
 
-    def query_hook(self, event: Event, start: datetime, end: datetime, environment_id: str) -> Any:
+    def query_hook(self, event: Event, start: datetime, end: datetime, environment_id: str) -> int:
         """ """
         raise NotImplementedError  # subclass must implement
 
@@ -174,7 +174,7 @@ class BaseEventFrequencyCondition(EventCondition):
 class EventFrequencyCondition(BaseEventFrequencyCondition):
     label = "The issue is seen more than {value} times in {interval}"
 
-    def query_hook(self, event: Event, start: datetime, end: datetime, environment_id: str) -> Any:
+    def query_hook(self, event: Event, start: datetime, end: datetime, environment_id: str) -> int:
         return self.tsdb.get_sums(
             model=self.tsdb.models.group,
             keys=[event.group_id],
@@ -188,7 +188,7 @@ class EventFrequencyCondition(BaseEventFrequencyCondition):
 class EventUniqueUserFrequencyCondition(BaseEventFrequencyCondition):
     label = "The issue is seen by more than {value} users in {interval}"
 
-    def query_hook(self, event: Event, start: datetime, end: datetime, environment_id: str) -> Any:
+    def query_hook(self, event: Event, start: datetime, end: datetime, environment_id: str) -> int:
         return self.tsdb.get_distinct_counts_totals(
             model=self.tsdb.models.users_affected_by_group,
             keys=[event.group_id],
