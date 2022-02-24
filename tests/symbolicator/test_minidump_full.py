@@ -1,17 +1,12 @@
-import zipfile
 from io import BytesIO
-from unittest.mock import patch
 
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 
 from sentry import eventstore
 from sentry.lang.native.utils import STORE_CRASH_REPORTS_ALL
 from sentry.models import EventAttachment, File
-from sentry.testutils import RelayStoreHelper, TransactionTestCase
 from sentry.testutils.helpers.task_runner import BurstTaskRunner
-from tests.symbolicator import get_fixture_path, insta_snapshot_stacktrace_data
+from sentry.testutils.symbolicator import SymbolicatorTestCase
 
 # IMPORTANT:
 # For these tests to run, write `symbolicator.enabled: true` into your
@@ -19,47 +14,8 @@ from tests.symbolicator import get_fixture_path, insta_snapshot_stacktrace_data
 
 
 @pytest.mark.snuba
-class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase):
-    @pytest.fixture(autouse=True)
-    def initialize(self, live_server, reset_snuba):
-        self.project.update_option("sentry:builtin_symbol_sources", [])
-        new_prefix = live_server.url
-
-        with patch("sentry.auth.system.is_internal_ip", return_value=True), self.options(
-            {"system.url-prefix": new_prefix}
-        ):
-
-            # Run test case:
-            yield
-
-    def upload_symbols(self):
-        url = reverse(
-            "sentry-api-0-dsym-files",
-            kwargs={
-                "organization_slug": self.project.organization.slug,
-                "project_slug": self.project.slug,
-            },
-        )
-
-        self.login_as(user=self.user)
-
-        out = BytesIO()
-        f = zipfile.ZipFile(out, "w")
-        f.write(get_fixture_path("windows.sym"), "crash.sym")
-        f.close()
-
-        response = self.client.post(
-            url,
-            {
-                "file": SimpleUploadedFile(
-                    "symbols.zip", out.getvalue(), content_type="application/zip"
-                )
-            },
-            format="multipart",
-        )
-        assert response.status_code == 201, response.content
-        assert len(response.data) == 1
-
+@pytest.mark.usefixtures("reset_snuba")
+class SymbolicatorMinidumpIntegrationTest(SymbolicatorTestCase):
     _FEATURES = {
         "organizations:event-attachments": True,
         "organizations:symbol-sources": False,
@@ -72,7 +28,7 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
         self.upload_symbols()
 
         with self.feature(self._FEATURES):
-            with open(get_fixture_path("windows.dmp"), "rb") as f:
+            with open(self.get_fixture_path("windows.dmp"), "rb") as f:
                 event = self.post_and_retrieve_minidump(
                     {
                         "upload_file_minidump": f,
@@ -81,7 +37,7 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
                     {"sentry[logger]": "test-logger"},
                 )
 
-        insta_snapshot_stacktrace_data(self, event.data)
+        self.insta_snapshot_stacktrace_data(event.data)
         assert event.data.get("logger") == "test-logger"
         # assert event.data.get("extra") == {"foo": "bar"}
 
@@ -105,7 +61,7 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
         self.upload_symbols()
 
         with self.feature("organizations:event-attachments"):
-            with open(get_fixture_path("windows.dmp"), "rb") as f:
+            with open(self.get_fixture_path("windows.dmp"), "rb") as f:
                 event = self.post_and_retrieve_minidump(
                     {"upload_file_minidump": f},
                     {"sentry": '{"logger":"test-logger"}', "foo": "bar"},
@@ -120,7 +76,7 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
         self.upload_symbols()
 
         with self.feature("organizations:event-attachments"):
-            with open(get_fixture_path("windows.dmp"), "rb") as f:
+            with open(self.get_fixture_path("windows.dmp"), "rb") as f:
                 event = self.post_and_retrieve_minidump(
                     {"upload_file_minidump": f},
                     {"sentry": "{{{{", "foo": "bar"},  # invalid sentry JSON
@@ -132,12 +88,12 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
 
     def test_missing_dsym(self):
         with self.feature(self._FEATURES):
-            with open(get_fixture_path("windows.dmp"), "rb") as f:
+            with open(self.get_fixture_path("windows.dmp"), "rb") as f:
                 event = self.post_and_retrieve_minidump(
                     {"upload_file_minidump": f}, {"sentry[logger]": "test-logger"}
                 )
 
-        insta_snapshot_stacktrace_data(self, event.data)
+        self.insta_snapshot_stacktrace_data(event.data)
         assert not EventAttachment.objects.filter(event_id=event.event_id)
 
     def test_reprocessing(self):
@@ -146,12 +102,12 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
         features = dict(self._FEATURES)
         features["organizations:reprocessing-v2"] = True
         with self.feature(features):
-            with open(get_fixture_path("windows.dmp"), "rb") as f:
+            with open(self.get_fixture_path("windows.dmp"), "rb") as f:
                 event = self.post_and_retrieve_minidump(
                     {"upload_file_minidump": f}, {"sentry[logger]": "test-logger"}
                 )
 
-            insta_snapshot_stacktrace_data(self, event.data, subname="initial")
+            self.insta_snapshot_stacktrace_data(self, event.data, subname="initial")
 
             self.upload_symbols()
 
@@ -166,7 +122,7 @@ class SymbolicatorMinidumpIntegrationTest(RelayStoreHelper, TransactionTestCase)
             assert new_event is not None
             assert new_event.event_id == event.event_id
 
-        insta_snapshot_stacktrace_data(self, new_event.data, subname="reprocessed")
+        self.insta_snapshot_stacktrace_data(new_event.data, subname="reprocessed")
 
         for event_id in (event.event_id, new_event.event_id):
             (minidump,) = sorted(
