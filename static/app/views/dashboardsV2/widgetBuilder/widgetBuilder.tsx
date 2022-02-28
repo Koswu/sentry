@@ -596,7 +596,9 @@ function WidgetBuilder({
             dashboardTitle={dashboard.title}
             goBackLocation={previousLocation}
             isEditing={isEditing}
-            onChangeTitle={newTitle => setState({...state, title: newTitle})}
+            onChangeTitle={newTitle =>
+              setState({...state, userHasModified: true, title: newTitle})
+            }
             onSave={handleSave}
           />
           <Body>
@@ -612,7 +614,11 @@ function WidgetBuilder({
                     <DisplayTypeSelector
                       displayType={state.displayType}
                       onChange={(option: {label: string; value: DisplayType}) => {
-                        setState({...state, displayType: option.value});
+                        setState({
+                          ...state,
+                          userHasModified: true,
+                          displayType: option.value,
+                        });
                       }}
                       error={state.errors?.displayType}
                     />
@@ -891,8 +897,10 @@ function WidgetBuilder({
                     dataSet: prebuiltWidget.widgetType
                       ? WIDGET_TYPE_TO_DATA_SET[prebuiltWidget.widgetType]
                       : DataSet.EVENTS,
+                    userHasModified: false,
                   })
                 }
+                bypassOverwriteModal={!state.userHasModified}
               />
             </Side>
           </Body>
