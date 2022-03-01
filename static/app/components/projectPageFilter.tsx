@@ -5,8 +5,8 @@ import isEqual from 'lodash/isEqual';
 import partition from 'lodash/partition';
 
 import {updateProjects} from 'sentry/actionCreators/pageFilters';
-import DropdownButton from 'sentry/components/dropdownButton';
 import MultipleProjectSelector from 'sentry/components/organizations/multipleProjectSelector';
+import PageFilterDropdownButton from 'sentry/components/organizations/pageFilters/pageFilterDropdownButton';
 import PlatformList from 'sentry/components/platformList';
 import {ALL_ACCESS_PROJECTS} from 'sentry/constants/pageFilters';
 import {IconProject} from 'sentry/icons';
@@ -69,7 +69,8 @@ export function ProjectPageFilter({router, specificProjectSlugs, ...otherProps}:
   );
   const {projects, initiallyLoaded: projectsLoaded} = useProjects();
   const organization = useOrganization();
-  const {selection, pinnedFilters, isReady} = useLegacyStore(PageFiltersStore);
+  const {selection, pinnedFilters, isReady, desyncedFilters} =
+    useLegacyStore(PageFiltersStore);
 
   useEffect(() => {
     if (!isEqual(selection.projects, currentSelectedProjects)) {
@@ -117,22 +118,26 @@ export function ProjectPageFilter({router, specificProjectSlugs, ...otherProps}:
       <IconProject />
     );
     return (
-      <StyledDropdownButton isOpen={isOpen} {...getActorProps()}>
+      <PageFilterDropdownButton
+        isOpen={isOpen}
+        filledFromUrl={desyncedFilters.has('projects')}
+        {...getActorProps()}
+      >
         <DropdownTitle>
           {icon}
           <TitleContainer>{title}</TitleContainer>
         </DropdownTitle>
-      </StyledDropdownButton>
+      </PageFilterDropdownButton>
     );
   };
 
   const customLoadingIndicator = (
-    <StyledDropdownButton showChevron={false} disabled>
+    <PageFilterDropdownButton showChevron={false} disabled>
       <DropdownTitle>
         <IconProject />
         {t('Loading\u2026')}
       </DropdownTitle>
-    </StyledDropdownButton>
+    </PageFilterDropdownButton>
   );
 
   return (
@@ -151,12 +156,6 @@ export function ProjectPageFilter({router, specificProjectSlugs, ...otherProps}:
     />
   );
 }
-
-const StyledDropdownButton = styled(DropdownButton)`
-  width: 100%;
-  height: 40px;
-  text-overflow: ellipsis;
-`;
 
 const TitleContainer = styled('div')`
   overflow: hidden;

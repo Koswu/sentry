@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 
 import {pinFilter, updateDateTime} from 'sentry/actionCreators/pageFilters';
 import Button from 'sentry/components/button';
-import DropdownButton from 'sentry/components/dropdownButton';
+import PageFilterDropdownButton from 'sentry/components/organizations/pageFilters/pageFilterDropdownButton';
 import TimeRangeSelector, {
   ChangeData,
 } from 'sentry/components/organizations/timeRangeSelector';
@@ -27,7 +27,7 @@ type Props = Omit<
 };
 
 function DatePageFilter({router, resetParamsOnChange, ...props}: Props) {
-  const {selection, pinnedFilters} = useLegacyStore(PageFiltersStore);
+  const {selection, pinnedFilters, desyncedFilters} = useLegacyStore(PageFiltersStore);
   const organization = useOrganization();
   const {start, end, period, utc} = selection.datetime;
 
@@ -61,11 +61,16 @@ function DatePageFilter({router, resetParamsOnChange, ...props}: Props) {
     }
 
     return (
-      <StyledDropdownButton isOpen={isOpen} icon={<IconCalendar />} {...getActorProps()}>
+      <PageFilterDropdownButton
+        isOpen={isOpen}
+        icon={<IconCalendar />}
+        filledFromUrl={desyncedFilters.has('datetime')}
+        {...getActorProps()}
+      >
         <DropdownTitle>
           <TitleContainer>{label}</TitleContainer>
         </DropdownTitle>
-      </StyledDropdownButton>
+      </PageFilterDropdownButton>
     );
   };
 
@@ -108,12 +113,6 @@ const StyledPageTimeRangeSelector = styled(PageTimeRangeSelector)`
   background: ${p => p.theme.background};
   border: none;
   box-shadow: none;
-`;
-
-const StyledDropdownButton = styled(DropdownButton)`
-  width: 100%;
-  height: 40px;
-  text-overflow: ellipsis;
 `;
 
 const TitleContainer = styled('div')`
