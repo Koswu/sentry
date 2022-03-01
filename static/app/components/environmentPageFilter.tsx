@@ -45,7 +45,7 @@ function EnvironmentPageFilter({router, resetParamsOnChange = []}: Props) {
       <PageFilterDropdownButton
         isOpen={isOpen}
         {...getActorProps()}
-        filledFromUrl={desyncedFilters.has('environments')}
+        highlighted={desyncedFilters.has('environments')}
       >
         <DropdownTitle>
           <IconWindow />

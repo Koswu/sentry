@@ -120,7 +120,7 @@ export function ProjectPageFilter({router, specificProjectSlugs, ...otherProps}:
     return (
       <PageFilterDropdownButton
         isOpen={isOpen}
-        filledFromUrl={desyncedFilters.has('projects')}
+        highlighted={desyncedFilters.has('projects')}
         {...getActorProps()}
       >
         <DropdownTitle>

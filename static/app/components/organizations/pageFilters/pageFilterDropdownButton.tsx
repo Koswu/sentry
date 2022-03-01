@@ -2,12 +2,20 @@ import styled from '@emotion/styled';
 
 import DropdownButton from 'sentry/components/dropdownButton';
 
-export default styled(DropdownButton)<{filledFromUrl?: boolean}>`
+type Props = {
+  /**
+   * Highlights the button blue. For page filters this indicates the filter
+   * has been desynced from the URL.
+   */
+  highlighted?: boolean;
+};
+
+export default styled(DropdownButton)<Props>`
   width: 100%;
   height: 40px;
   text-overflow: ellipsis;
   ${p =>
-    p.filledFromUrl &&
+    p.highlighted &&
     `
     &,
     &:active,

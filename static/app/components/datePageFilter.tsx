@@ -64,7 +64,7 @@ function DatePageFilter({router, resetParamsOnChange, ...props}: Props) {
       <PageFilterDropdownButton
         isOpen={isOpen}
         icon={<IconCalendar />}
-        filledFromUrl={desyncedFilters.has('datetime')}
+        highlighted={desyncedFilters.has('datetime')}
         {...getActorProps()}
       >
         <DropdownTitle>
