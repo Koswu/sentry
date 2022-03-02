@@ -2,7 +2,8 @@ import React from 'react';
 import {useTheme} from '@emotion/react';
 import styled from '@emotion/styled';
 
-import {openWidgetBuilderOverwriteModal} from 'sentry/actionCreators/modal';
+import {openModal} from 'sentry/actionCreators/modal';
+import {OverwriteWidgetModalProps} from 'sentry/components/modals/widgetBuilder/overwriteWidgetModal';
 import {t} from 'sentry/locale';
 import space from 'sentry/styles/space';
 import {
@@ -12,15 +13,25 @@ import {
 
 import {Card} from './card';
 
+async function openWidgetBuilderOverwriteModal(options: OverwriteWidgetModalProps) {
+  const mod = await import('sentry/components/modals/widgetBuilder/overwriteWidgetModal');
+  const {default: Modal, modalCss} = mod;
+
+  openModal(deps => <Modal {...deps} {...options} />, {backdrop: 'static', modalCss});
+}
+
 type Props = {
   bypassOverwriteModal: boolean;
   onWidgetSelect: (widget: WidgetTemplate) => void;
 };
 
-export function WidgetLibrary({bypassOverwriteModal, onWidgetSelect}: Props) {
+export function WidgetLibrary({onWidgetSelect, bypassOverwriteModal}: Props) {
   const theme = useTheme();
 
-  function getLibrarySelectionHandler(widget, iconColor) {
+  function getLibrarySelectionHandler(
+    widget: OverwriteWidgetModalProps['widget'],
+    iconColor: OverwriteWidgetModalProps['iconColor']
+  ) {
     return function handleWidgetSelect() {
       if (bypassOverwriteModal) {
         onWidgetSelect(widget);

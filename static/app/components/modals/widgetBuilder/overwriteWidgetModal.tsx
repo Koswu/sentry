@@ -22,7 +22,7 @@ const MODAL_DESCRIPTION = t(
   "You've already started building this widget and will lose unsaved changes. Are you sure you want to overwrite this widget with the template values?"
 );
 
-export default function OverwriteWidgetModal({
+function OverwriteWidgetModal({
   Header,
   Body,
   Footer,
@@ -48,16 +48,18 @@ export default function OverwriteWidgetModal({
         </CardWrapper>
       </Body>
       <Footer>
-        <Actions>
+        <ButtonBar gap={1.5}>
           <Button onClick={closeModal}>{t('Cancel')}</Button>
           <Button priority="primary" onClick={handleConfirm}>
             {t('Confirm')}
           </Button>
-        </Actions>
+        </ButtonBar>
       </Footer>
     </React.Fragment>
   );
 }
+
+export default OverwriteWidgetModal;
 
 export const modalCss = css`
   width: 100%;
@@ -67,8 +69,4 @@ export const modalCss = css`
 
 const CardWrapper = styled('div')`
   padding: ${space(3)} 0;
-`;
-
-const Actions = styled(ButtonBar)`
-  gap: ${space(1.5)};
 `;
